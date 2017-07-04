@@ -28,8 +28,12 @@ class LogsController extends AppController
     public function index()
     {
         $user_id = 2;
-        $product_ids = $this->Logs->findByUserId($user_id)->extract('product_id');
-        $products = $this->Products->find()->where(['id IN' => $product_ids->toArray()])->all();
+
+        $subquery =  $this->Logs->find()->where(['Products.id = Logs.product_id and Logs.user_id = :user_id'])->select(['id']);
+        $products = $this->Products->find()->where("exists ({$subquery})")->bind(':user_id', $user_id);
+
+//        $product_ids = $this->Logs->findByUserId($user_id)->extract('product_id');
+//        $products = $this->Products->find()->where(['id IN' => $product_ids->toArray()])->all();
         $result = [
             'total_count' => $products->count(),
             'products' => [],
